@@ -24,6 +24,33 @@ A lightweight, future-friendly time clock app. This step initializes brand/theme
    python -m punchpad_app
    ```
 
+### Kiosk / PIN Mode
+- Set an employee PIN (via bootstrap or repo helpers).
+- Run kiosk mode and enter the PIN when prompted:
+  ```bash
+  python -m punchpad_app kiosk pin --source $(hostname)
+  ```
+- Defaults:
+  - `kiosk.debounce_seconds` = 30 (prevents double taps)
+  - `kiosk.pin_attempt_window_seconds` = 300
+  - `kiosk.pin_max_attempts_per_window` = 5
+  - `kiosk.lockout_minutes` = 10
+- Change defaults via the `settings` table using repo helpers.
+
+### Reports
+- Daily totals:
+  ```bash
+  python -m punchpad_app report daily --emp 1 --start 2025-08-01 --end 2025-08-07
+  ```
+- Period total:
+  ```bash
+  python -m punchpad_app report period --emp 1 --start 2025-08-01 --end 2025-08-15
+  ```
+- CSV export:
+  ```bash
+  python -m punchpad_app report daily --emp 1 --start 2025-08-01 --end 2025-08-07 --csv ./report.csv
+  ```
+
 ## Data directory
 - Windows: `C:\\ProgramData\\PunchPad\\`
 - Non-Windows (Linux/macOS): override via env `PUNCHPAD_DATA_DIR`. If not set, defaults to `~/.local/share/punchpad`.

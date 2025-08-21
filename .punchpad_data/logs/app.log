@@ -1,0 +1,40 @@
+2025-08-21 16:52:39 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 16:52:39 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 16:52:39 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 16:52:39 [INFO] punchpad_app.core.db: Applying migration 1 from 0001_init.sql
+2025-08-21 16:53:02 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 16:53:02 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 16:53:02 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 16:53:03 [INFO] punchpad_app.core.db: Applying migration 1 from 0001_init.sql
+2025-08-21 16:53:03 [INFO] __main__: Applied migrations: 1
+2025-08-21 16:53:03 [INFO] punchpad_app.core.db: Seeding default settings for keys: pay_period, week_start, rounding_minutes, overtime_policy, ui.idle_logout_seconds, ui.keypad_mode, ui.keypad_hotplug_poll_seconds, backups.keep_days, jobs.reconcile_interval_seconds
+2025-08-21 16:53:03 [INFO] __main__: DB ready
+2025-08-21 17:11:49 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 17:11:49 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 17:11:49 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:11:49 [INFO] __main__: No migrations to apply; already up to date
+2025-08-21 17:11:49 [INFO] __main__: DB ready
+2025-08-21 17:12:13 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 17:12:13 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 17:12:13 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:12:13 [INFO] __main__: No migrations to apply; already up to date
+2025-08-21 17:12:13 [INFO] __main__: DB ready
+2025-08-21 17:12:13 [INFO] __main__: Manager bootstrap start; DB=/home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 17:12:13 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:12:13 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:12:13 [INFO] punchpad_app.core.repo: Setting saved: manager_pin_hash
+2025-08-21 17:12:13 [INFO] __main__: Manager PIN set successfully
+2025-08-21 17:21:46 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 17:21:46 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 17:21:46 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:21:46 [INFO] __main__: No migrations to apply; already up to date
+2025-08-21 17:21:46 [INFO] __main__: DB ready
+2025-08-21 17:21:46 [INFO] __main__: Reconciler started (interval configured in settings)
+2025-08-21 17:21:46 [INFO] punchpad_app.core.reconciler: Reconciler started (interval=5s)
+2025-08-21 17:23:12 [INFO] __main__: PunchPad start — data dir: /home/oneknight/projects/punchpad/.punchpad_data
+2025-08-21 17:23:12 [INFO] __main__: SQLite DB path: /home/oneknight/projects/punchpad/.punchpad_data/punchpad.sqlite
+2025-08-21 17:23:12 [INFO] punchpad_app.core.db: SQLite PRAGMAs active: journal_mode=wal, synchronous=2, foreign_keys=1, busy_timeout=5000
+2025-08-21 17:23:12 [INFO] __main__: No migrations to apply; already up to date
+2025-08-21 17:23:12 [INFO] __main__: DB ready
+2025-08-21 17:23:12 [INFO] punchpad_app.core.reconciler: Reconciler started (interval=5s)
+2025-08-21 17:23:12 [INFO] __main__: Reconciler started (interval=5s)
