@@ -1,0 +1,26 @@
+{
+  "pay_period": "weekly",
+  "week_start": "Monday",
+  "rounding_minutes": 0,
+  "overtime_policy": "none",
+  "ui": {
+    "idle_logout_seconds": 60,
+    "keypad_mode": "auto",
+    "keypad_hotplug_poll_seconds": 2,
+    "theme": {
+      "primary": "#1F3A5F",
+      "accent": "#00C2A8",
+      "bg": "#F5F7FA",
+      "text": "#0F172A",
+      "success": "#16A34A",
+      "danger": "#DC2626",
+      "font_family": "Segoe UI"
+    }
+  },
+  "backups": {
+    "keep_days": 90
+  },
+  "jobs": {
+    "reconcile_interval_seconds": 5
+  }
+}
