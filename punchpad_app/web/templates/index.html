@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PunchPad</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1 class="title">PunchPad</h1>
+      <p class="subtitle">Clock in. Clock out. No drama.</p>
+      <form method="post" action="/pin">
+        <div class="form-row">
+          <input class="pin-input" type="password" name="pin" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="Enter PIN" autofocus />
+          <button class="submit-btn" type="submit">Submit</button>
+        </div>
+      </form>
+      <div class="footer">Runs locally • No data leaves this device</div>
+    </div>
+  </div>
+</body>
+</html>
