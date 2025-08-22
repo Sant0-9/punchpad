@@ -158,34 +158,60 @@ def close_open_punch(employee_id: int, clock_out_iso: str) -> int:
 # Reporting helpers
 
 def list_punches_between(employee_id: int, start_iso: str, end_iso: str) -> List[sqlite3.Row]:
-    """List closed punches overlapping [start, end)."""
-    with get_conn(DB_PATH) as conn:
+    """List closed punches overlapping [start, end).
+
+    Start bound is inclusive, end bound is exclusive.
+    Inputs are normalized to UTC Zulu strings before querying.
+    """
+    # Local import to avoid circular dependency with reports
+    from .reports import to_utc_start_iso, to_utc_end_iso
+    s = to_utc_start_iso(start_iso)
+    e = to_utc_end_iso(end_iso)
+    # Import connection helper and DB path at call-time to honor test reloads and env
+    from .db import get_conn
+    # Read override DB path if reports set one for this call; else use current module's DB_PATH
+    import os as _os
+    override = _os.environ.get("PUNCHPAD_REPORTS_DB_PATH")
+    if override:
+        db_path = override
+    else:
+        from .paths import DB_PATH as CURRENT_DB_PATH
+        db_path = str(CURRENT_DB_PATH)
+    with get_conn(db_path) as conn:
         return list(
             conn.execute(
                 """
-                SELECT * FROM punches
+                SELECT id, employee_id, clock_in, clock_out, method, note
+                FROM punches
                 WHERE employee_id = ?
-                  AND clock_out IS NOT NULL
                   AND clock_in < ?
+                  AND clock_out IS NOT NULL
                   AND clock_out > ?
                 ORDER BY clock_in ASC
                 """,
-                (employee_id, end_iso, start_iso),
+                (employee_id, e, s),
             ).fetchall()
         )
 
 
 def worked_intervals(employee_id: int, start_iso: str, end_iso: str) -> List[Tuple[str, str]]:
-    """Return clipped closed intervals within [start, end)."""
-    rows = list_punches_between(employee_id, start_iso, end_iso)
+    """Return clipped closed intervals within [start, end).
+
+    Bounds are normalized to UTC Z strings, and each interval is clamped to [s, e).
+    """
+    # Local import to avoid circular dependency with reports
+    from .reports import to_utc_start_iso, to_utc_end_iso
+    s = to_utc_start_iso(start_iso)
+    e = to_utc_end_iso(end_iso)
+    rows = list_punches_between(employee_id, s, e)
     intervals: List[Tuple[str, str]] = []
     for r in rows:
         ci = r["clock_in"]
         co = r["clock_out"]
         if not co:
             continue
-        start = max(ci, start_iso)
-        end = min(co, end_iso)
+        start = max(ci, s)
+        end = min(co, e)
         if end > start:
             intervals.append((start, end))
     return intervals
@@ -193,9 +219,15 @@ def worked_intervals(employee_id: int, start_iso: str, end_iso: str) -> List[Tup
 
 def total_seconds_worked(employee_id: int, start_iso: str, end_iso: str) -> int:
     from datetime import datetime
+    # Local import to avoid circular dependency with reports
+    from .reports import to_utc_start_iso, to_utc_end_iso
+    s = to_utc_start_iso(start_iso)
+    e = to_utc_end_iso(end_iso)
     total = 0
-    for s, e in worked_intervals(employee_id, start_iso, end_iso):
-        sd = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        ed = datetime.fromisoformat(e.replace("Z", "+00:00"))
-        total += int((ed - sd).total_seconds())
-    return total
+    for s_iso, e_iso in worked_intervals(employee_id, s, e):
+        sd = datetime.fromisoformat(s_iso.replace("Z", "+00:00"))
+        ed = datetime.fromisoformat(e_iso.replace("Z", "+00:00"))
+        seconds = int(max(0, (ed - sd).total_seconds()))
+        if seconds > 0:
+            total += seconds
+    return int(total)
