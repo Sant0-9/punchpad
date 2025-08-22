@@ -13,6 +13,8 @@ from .core.security import verify_employee_pin, check_pin_lockout, record_pin_at
 from .core.punches import toggle_punch
 from .core.repo import append_audit
 from .core.reports import daily_totals as rpt_daily_totals, period_total as rpt_period_total, to_csv as rpt_to_csv
+from .tui.kiosk_screen import render_banner, _clear_screen, _sleep_ms, prompt_pin
+from .web.server import run_server as web_run_server
 import socket
 import getpass
 from datetime import datetime, timezone
@@ -116,6 +118,185 @@ def main() -> int:
             else:
                 print("Unexpected result.")
                 return 1
+
+    # Kiosk run loop (fullscreen)
+    if len(sys.argv) >= 3 and sys.argv[1] == "kiosk" and sys.argv[2] == "run":
+        source = socket.gethostname()
+        test_pin = None
+        result_ms = 1800
+        args = sys.argv[3:]
+        i = 0
+        while i < len(args):
+            if args[i] == "--source" and i + 1 < len(args):
+                source = args[i + 1]
+                i += 2
+                continue
+            if args[i] == "--pin" and i + 1 < len(args):
+                test_pin = args[i + 1]
+                i += 2
+                continue
+            if args[i] == "--result_ms" and i + 1 < len(args):
+                try:
+                    result_ms = int(args[i + 1])
+                except Exception:
+                    result_ms = 1800
+                i += 2
+                continue
+            i += 1
+
+        logging.getLogger(__name__).info("kiosk.run start source=%s", source)
+
+        # Minimal getch implementation using stdio in raw-like mode without curses
+        def _getch() -> str:
+            try:
+                import termios, tty  # type: ignore
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setraw(fd)
+                    ch = sys.stdin.read(1)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                return ch
+            except Exception:
+                # Fallback: regular input line
+                return sys.stdin.read(1)
+
+        while True:
+            try:
+                _clear_screen()
+                print("PunchPad — Enter PIN")
+
+                # Lockout check before asking PIN ensures quick feedback when locked
+                now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                with db_get_conn(paths.DB_PATH) as conn:
+                    locked, until_iso = check_pin_lockout(conn, source, now_iso)
+                if locked:
+                    banner = render_banner("locked", "Too many attempts", None)
+                    print(banner, end="")
+                    logging.getLogger(__name__).info("kiosk.result status=locked employee_id=- reason=lockout")
+                    _sleep_ms(result_ms)
+                    if test_pin is not None:
+                        return 0
+                    continue
+
+                if test_pin is not None:
+                    pin_val = test_pin
+                else:
+                    try:
+                        pin_val = prompt_pin(_getch, echo=False)
+                    except KeyboardInterrupt:
+                        print("\nExiting kiosk.")
+                        return 0
+
+                logging.getLogger(__name__).info("kiosk.pin received source=%s len=%s", source, len(pin_val) if pin_val is not None else 0)
+
+                with db_get_conn(paths.DB_PATH) as conn:
+                    # Re-check lockout with current now
+                    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    locked, until_iso = check_pin_lockout(conn, source, now_iso)
+                    if locked:
+                        banner = render_banner("locked", "Too many attempts", None)
+                        print(banner, end="")
+                        logging.getLogger(__name__).info("kiosk.result status=locked employee_id=- reason=lockout")
+                        _sleep_ms(result_ms)
+                        if test_pin is not None:
+                            return 0
+                        continue
+
+                    emp_id = verify_employee_pin(conn, pin_val)
+                    if emp_id is None:
+                        record_pin_attempt(conn, source, now_iso, False, None, "bad_pin")
+                        append_audit("system", "auth.pin_fail", "auth", None, {"source": source})
+                        banner = render_banner("blocked", "Invalid PIN", None)
+                        print(banner, end="")
+                        logging.getLogger(__name__).info("kiosk.result status=blocked employee_id=- reason=bad_pin")
+                        _sleep_ms(result_ms)
+                        if test_pin is not None:
+                            return 0
+                        continue
+
+                    # Success attempt
+                    record_pin_attempt(conn, source, now_iso, True, emp_id, None)
+
+                # Toggle punch
+                with db_get_conn(paths.DB_PATH) as conn:
+                    res = toggle_punch(conn, emp_id, method="kiosk", note=None, now_iso=now_iso)
+                    action = res.get("action")
+                    status = res.get("status")
+                    local_time = datetime.now().strftime("%H:%M")
+                    if status == "blocked":
+                        retry = res.get("retry_after_seconds")
+                        banner = render_banner("blocked", "Try again soon", f"~{retry}s")
+                        print(banner, end="")
+                        logging.getLogger(__name__).info("kiosk.result status=blocked employee_id=%s reason=duplicate", emp_id)
+                    else:
+                        queued = status == "queued"
+                        if action == "in":
+                            msg = f"Clocked IN {local_time}" + (" (queued)" if queued else "")
+                            banner = render_banner("ok_in", msg, None)
+                            print(banner, end="")
+                            logging.getLogger(__name__).info("kiosk.result status=%s employee_id=%s reason=-", "queued" if queued else "ok_in", emp_id)
+                        else:
+                            msg = f"Clocked OUT {local_time}" + (" (queued)" if queued else "")
+                            banner = render_banner("ok_out", msg, None)
+                            print(banner, end="")
+                            logging.getLogger(__name__).info("kiosk.result status=%s employee_id=%s reason=-", "queued" if queued else "ok_out", emp_id)
+
+                _sleep_ms(result_ms)
+                if test_pin is not None:
+                    return 0
+            except KeyboardInterrupt:
+                print("\nExiting kiosk.")
+                return 0
+
+    # Kiosk web server
+    if len(sys.argv) >= 3 and sys.argv[1] == "kiosk" and sys.argv[2] == "web":
+        host = "127.0.0.1"
+        port = 8765
+        redirect_seconds = 2
+        source = socket.gethostname()
+        args = sys.argv[3:]
+        i = 0
+        while i < len(args):
+            if args[i] == "--host" and i + 1 < len(args):
+                host = args[i + 1]
+                i += 2
+                continue
+            if args[i] == "--port" and i + 1 < len(args):
+                try:
+                    port = int(args[i + 1])
+                except Exception:
+                    port = 8765
+                i += 2
+                continue
+            if args[i] == "--redirect-seconds" and i + 1 < len(args):
+                try:
+                    redirect_seconds = int(args[i + 1])
+                except Exception:
+                    redirect_seconds = 2
+                i += 2
+                continue
+            if args[i] == "--source" and i + 1 < len(args):
+                source = args[i + 1]
+                i += 2
+                continue
+            i += 1
+
+        logger.info("kiosk.web start host=%s port=%s", host, port)
+        print(f"Starting PunchPad web on http://{host}:{port}/")
+        # Ensure migrations and defaults applied before starting web server
+        with get_conn(paths.DB_PATH) as conn:
+            list(apply_migrations(conn))
+            seed_default_settings(conn)
+        # Start reconciler idempotently
+        start_reconciler()
+        # Run server loop (Ctrl+C exits cleanly)
+        try:
+            web_run_server(host=host, port=port, redirect_seconds=redirect_seconds, source=source)
+        except KeyboardInterrupt:
+            print("\nStopping web server.")
+        return 0
 
     # Reports CLI
     if len(sys.argv) >= 2 and sys.argv[1] == "report":

@@ -51,6 +51,35 @@ A lightweight, future-friendly time clock app. This step initializes brand/theme
   python -m punchpad_app report daily --emp 1 --start 2025-08-01 --end 2025-08-07 --csv ./report.csv
   ```
 
+### Kiosk Run Mode (Fullscreen)
+- Start the fullscreen kiosk loop:
+  ```bash
+  python -m punchpad_app kiosk run
+  ```
+- What users see:
+  - A large prompt: "PunchPad — Enter PIN"
+  - After entering a valid PIN: big banner "PUNCHED IN" or "PUNCHED OUT" with local HH:MM
+  - If debounced: banner "Duplicate punch blocked"
+  - If locked out: banner "Locked"
+- Admin note: adjust debounce/lockout in `settings` (e.g., `kiosk.debounce_seconds`, `kiosk.pin_max_attempts_per_window`).
+- Testing shortcut (non-interactive single iteration):
+  ```bash
+  python -m punchpad_app kiosk run --pin 1234 --result_ms 10
+  ```
+
+### Web UI (Local Kiosk)
+- Start the local-only web UI:
+  ```bash
+  python -m punchpad_app kiosk web
+  ```
+- Then open `http://127.0.0.1:8765/` in a browser. You'll see a clean PIN screen.
+- Submitting a valid PIN will show a big banner ("PUNCHED IN" or "PUNCHED OUT") with local time, then auto-return to the PIN screen after 2 seconds.
+- Duplicate within debounce shows a "Duplicate punch blocked" banner. Too many bad PINs shows a "Locked" banner.
+- Notes:
+  - Local only by default. To expose on LAN: `--host 0.0.0.0` (ensure your network is trusted before doing this).
+  - Change auto-redirect seconds with `--redirect-seconds N`.
+  - All logic (debounce, lockout, queue fallback) matches the CLI.
+
 ## Data directory
 - Windows: `C:\\ProgramData\\PunchPad\\`
 - Non-Windows (Linux/macOS): override via env `PUNCHPAD_DATA_DIR`. If not set, defaults to `~/.local/share/punchpad`.
