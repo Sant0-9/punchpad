@@ -241,7 +241,7 @@ def main() -> int:
             redirect_seconds = int(args.redirect_seconds)
             source = args.source
             logger.info("kiosk.web start host=%s port=%s", host, port)
-            print(f"Starting PunchPad web on http://{host}:{port}/")
+            print(f"Starting PunchPad web on http://{host}:{port}/  (Reports at /reports)")
             with get_conn(paths.DB_PATH) as conn:
                 list(apply_migrations(conn))
                 seed_default_settings(conn)

@@ -85,6 +85,30 @@ A lightweight, future-friendly time clock app. This step initializes brand/theme
   - Change auto-redirect seconds with `--redirect-seconds N`.
   - All logic (debounce, lockout, queue fallback) matches the CLI.
 
+### Reports Dashboard
+- Start the same local web server:
+  ```bash
+  python -m punchpad_app kiosk web
+  ```
+- Open `http://127.0.0.1:8765/reports`.
+- Fill `employee_id`, `start` (YYYY-MM-DD), `end` (YYYY-MM-DD), then click “View Report”.
+- Click “Download CSV” to get the same data as a `.csv` file.
+- Note: All times are computed in UTC and daily buckets are split by UTC midnight. A future step may format times in local time.
+
+### Admin (Local)
+- Start the same local web server:
+  ```bash
+  python -m punchpad_app kiosk web
+  ```
+- Open `http://127.0.0.1:8765/admin`.
+- Enter the Manager PIN (seeded earlier via bootstrap/settings) for each admin action.
+- Use the page to:
+  - Add employees
+  - Enable/Disable employees
+  - Set/Reset an employee PIN
+  - View recent punches per employee
+- Note: Admin actions require entering the Manager PIN each time (no session). Local-only by default.
+
 ## Data directory
 - Windows: `C:\\ProgramData\\PunchPad\\`
 - Non-Windows (Linux/macOS): override via env `PUNCHPAD_DATA_DIR`. If not set, defaults to `~/.local/share/punchpad`.

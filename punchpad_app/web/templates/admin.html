@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PunchPad — Admin</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="/" class="">Punch</a>
+      <a href="/reports" class="">Reports</a>
+      <a href="/admin" class="active">Admin</a>
+    </nav>
+    <div class="card">
+      <h1 class="title">Admin</h1>
+      <p class="subtitle">Local-only admin. Each action requires Manager PIN.</p>
+
+      {{success_html}}
+      {{error_html}}
+
+      <div class="card" style="margin-top: 12px;">
+        <h2 class="title" style="font-size: 20px;">Add Employee</h2>
+        <form method="post" action="/admin/employee/create">
+          <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+            <input class="pin-input" name="first_name" type="text" placeholder="First name" />
+            <input class="pin-input" name="last_name" type="text" placeholder="Last name" />
+            <input class="pin-input" name="manager_pin" type="password" placeholder="Manager PIN" />
+          </div>
+          <div class="form-row" style="grid-template-columns: 1fr; margin-top: 12px;">
+            <button class="submit-btn" type="submit">Create Employee</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top: 12px;">
+        <h2 class="title" style="font-size: 20px;">Employees</h2>
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Active</th><th>Last Punch</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {{employees_rows}}
+          </tbody>
+        </table>
+      </div>
+
+      {{punches_html}}
+    </div>
+  </div>
+</body>
+</html>

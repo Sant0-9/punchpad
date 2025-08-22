@@ -83,9 +83,9 @@ def daily_totals(employee_id: int, start_iso: str, end_iso: str) -> Dict[str, in
     # Fetch and clamp intervals once, then split across days
     # Import lazily to avoid stale references across test reloads
     from .repo import worked_intervals
-    # Ensure repo uses the same DB path captured when reports was imported
+    # Respect an explicit PUNCHPAD_REPORTS_DB_PATH if already set by caller
     prev = os.environ.get("PUNCHPAD_REPORTS_DB_PATH")
-    if REPORTS_DB_PATH:
+    if prev is None and REPORTS_DB_PATH:
         os.environ["PUNCHPAD_REPORTS_DB_PATH"] = str(REPORTS_DB_PATH)
     try:
         intervals_iter = worked_intervals(employee_id, s, e)
@@ -133,7 +133,7 @@ def period_total(employee_id: int, start_iso: str, end_iso: str) -> int:
     # Import lazily to avoid stale references across test reloads
     from .repo import total_seconds_worked
     prev = os.environ.get("PUNCHPAD_REPORTS_DB_PATH")
-    if REPORTS_DB_PATH:
+    if prev is None and REPORTS_DB_PATH:
         os.environ["PUNCHPAD_REPORTS_DB_PATH"] = str(REPORTS_DB_PATH)
     try:
         return total_seconds_worked(employee_id, s, e)
@@ -158,3 +158,30 @@ def to_csv(rows: List[dict], filepath: str) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def build_csv(rows: List[dict]) -> bytes:
+    """Return CSV bytes for given rows with keys from first row.
+
+    If rows is empty, write only header: date,employee_id,seconds
+    """
+    import io
+    output = io.StringIO()
+    if not rows:
+        fieldnames = ["date", "employee_id", "seconds"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        return output.getvalue().encode("utf-8")
+    fieldnames = list(rows[0].keys())
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for row in rows:
+        writer.writerow(row)
+    return output.getvalue().encode("utf-8")
+
+
+def format_hhmm(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    return f"{hours:02d}:{minutes:02d}"
