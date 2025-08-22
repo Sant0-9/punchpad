@@ -19,10 +19,15 @@ A lightweight, future-friendly time clock app. This step initializes brand/theme
      .venv\\Scripts\\Activate.ps1
      ```
 
-2. Run the dev stub:
+2. Install in editable mode and run the CLI:
    ```bash
-   python -m punchpad_app
+  pip install -e .
+  punchpad --help
    ```
+
+### Installation
+- Dev install: `pip install -e .`
+- Usage: `punchpad --help`
 
 ### Kiosk / PIN Mode
 - Set an employee PIN (via bootstrap or repo helpers).
